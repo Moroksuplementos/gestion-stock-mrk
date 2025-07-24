@@ -5,23 +5,54 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
+.pnpm-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Diagnostic reports (https://nodejs.org/api/report.html)
+.report/
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# Node.js
+# node_modules
+/node_modules
+
+# Runtime data
+.vscode-test
+.tmp
+.npm
+
+# Optional npm cache directory
+.npm/
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Vercel
+.vercel/
+
+# dotenv files
+.env
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Mac
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-"package-lock.json" 
-"package-lock.json" 
-"package-lock.json" 
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Build output
+/dist
+
+# Firebase
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+
+# Ignorar package-lock.json para evitar conflictos de plataforma en Vercel
+package-lock.json
