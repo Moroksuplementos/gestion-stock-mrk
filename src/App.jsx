@@ -8,16 +8,16 @@ const PlusCircleIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" 
 const EditIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>;
 const TrashIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>;
 const AlertTriangleIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-yellow-500"><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" x2="12" y1="9" y2="13"></line><line x1="12" x2="12.01" y1="17" y2="17"></line></svg>;
-const ShoppingCartIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 mr-2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>;
-const SearchIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-gray-400"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>;
-const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 mr-2 text-red-500"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>;
-const ChartBarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 mr-2"><path d="M12 20V10M18 20V4M6 20V16"></path></svg>;
-const PackageIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 mr-2"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>;
-const TargetIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 mr-2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>;
-const TruckIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 mr-2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>;
+const ShoppingCartIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 mr-2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>;
+const SearchIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-gray-400"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>;
+const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 mr-2 text-red-500"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>;
+const ChartBarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 mr-2"><path d="M12 20V10M18 20V4M6 20V16"></path></svg>;
+const PackageIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 mr-2"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>;
+const TargetIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 mr-2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>;
+const TruckIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 mr-2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>;
 const ArrowDownTrayIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 mr-2"><path d="M3 15v4c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2v-4M17 9l-5 5-5-5M12 14V3"></path></svg>;
-const ArrowPathIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 mr-2"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg>;
-const BuildingStorefrontIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 mr-2"><path d="M3 21h18M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7H3l2-4h14l2 4h-3M3 21V7m18 14V7M12 21v-3"></path></svg>;
+const ArrowPathIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 mr-2"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg>;
+const BuildingStorefrontIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 mr-2"><path d="M3 21h18M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7H3l2-4h14l2 4h-3M3 21V7m18 14V7M12 21v-3"></path></svg>;
 
 const getFutureDate = (months) => { const date = new Date(); date.setMonth(date.getMonth() + months); return date; };
 
@@ -519,6 +519,100 @@ function MovementView({ movements, isLoading }) {
     );
 }
 
+function SaleCreationView({ products, combos, cart, setCart, onOpenModal }) {
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const addToCart = (item, type) => {
+        const existingItem = cart.find(cartItem => cartItem.id === item.id && cartItem.type === type);
+        if (existingItem) {
+            setCart(cart.map(cartItem => cartItem.id === item.id && cartItem.type === type ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem));
+        } else {
+            setCart([...cart, { ...item, quantity: 1, type }]);
+        }
+    };
+
+    const updateCartQuantity = (itemId, type, quantity) => {
+        if (quantity <= 0) {
+            setCart(cart.filter(cartItem => !(cartItem.id === itemId && cartItem.type === type)));
+        } else {
+            setCart(cart.map(cartItem => cartItem.id === itemId && cartItem.type === type ? { ...cartItem, quantity } : cartItem));
+        }
+    };
+    
+    const totalAmount = useMemo(() => {
+        return cart.reduce((total, cartItem) => {
+            if (cartItem.type === 'product') {
+                return total + (cartItem.weighted_average_cost * cartItem.quantity);
+            }
+            if (cartItem.type === 'combo') {
+                const comboTotal = cartItem.items.reduce((comboSum, comboProduct) => {
+                    const productDetails = products.find(p => p.id === comboProduct.productId);
+                    return comboSum + (productDetails?.weighted_average_cost || 0) * comboProduct.quantity;
+                }, 0);
+                return total + (comboTotal * cartItem.quantity);
+            }
+            return total;
+        }, 0);
+    }, [cart, products]);
+
+    const filteredItems = useMemo(() => {
+        const lowerSearchTerm = searchTerm.toLowerCase();
+        const allItems = [
+            ...products.map(p => ({...p, type: 'product', name: `${p.baseName} (${p.variantName})`})),
+            ...combos.map(c => ({...c, type: 'combo'}))
+        ];
+        return allItems.filter(item => item.name.toLowerCase().includes(lowerSearchTerm) || item.sku.toLowerCase().includes(lowerSearchTerm));
+    }, [products, combos, searchTerm]);
+
+    return (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 bg-gray-800 rounded-lg shadow-md p-6 border border-gray-700">
+                <h2 className="text-xl font-semibold mb-4 text-white">Items Disponibles</h2>
+                <div className="relative mb-4">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><SearchIcon /></div>
+                    <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Buscar producto o combo..." className="w-full bg-gray-900 border border-gray-600 text-white text-sm rounded-lg focus:ring-yellow-500 focus:border-yellow-500 block pl-10 p-2.5" />
+                </div>
+                <div className="max-h-96 overflow-y-auto divide-y divide-gray-700">
+                    {filteredItems.map(item => (
+                        <div key={`${item.type}-${item.id}`} className="flex justify-between items-center p-2 hover:bg-gray-700/50">
+                            <div>
+                                <p className="font-bold text-white">{item.name}</p>
+                                <p className="text-xs text-gray-400">{item.sku}</p>
+                            </div>
+                            <button onClick={() => addToCart(item, item.type)} className="bg-yellow-500 text-black font-bold py-1 px-3 rounded-lg text-sm hover:bg-yellow-600">+</button>
+                        </div>
+                    ))}
+                </div>
+            </div>
+            <div className="bg-gray-800 rounded-lg shadow-md p-6 border border-gray-700">
+                <h2 className="text-xl font-semibold mb-4 text-white">Carrito de Venta</h2>
+                <div className="space-y-2 max-h-80 overflow-y-auto divide-y divide-gray-700">
+                    {cart.length === 0 ? <p className="text-gray-400 text-center py-10">El carrito está vacío</p> : cart.map(item => (
+                        <div key={`${item.type}-${item.id}`} className="pt-2">
+                            <p className="font-bold text-white text-sm">{item.name}</p>
+                            <div className="flex items-center justify-between mt-1">
+                                <div className="flex items-center">
+                                    <button onClick={() => updateCartQuantity(item.id, item.type, item.quantity - 1)} className="bg-gray-700 h-6 w-6 rounded-full text-white">-</button>
+                                    <span className="px-3">{item.quantity}</span>
+                                    <button onClick={() => updateCartQuantity(item.id, item.type, item.quantity + 1)} className="bg-gray-700 h-6 w-6 rounded-full text-white">+</button>
+                                </div>
+                                <button onClick={() => updateCartQuantity(item.id, item.type, 0)} className="text-red-500 hover:text-red-400"><TrashIcon /></button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                <div className="border-t border-gray-700 mt-4 pt-4">
+                    <div className="flex justify-between font-bold text-lg">
+                        <span className="text-white">Total:</span>
+                        <span className="text-yellow-500">{totalAmount.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}</span>
+                    </div>
+                    <button onClick={() => onOpenModal('sale')} disabled={cart.length === 0} className="w-full mt-4 bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed">Finalizar Venta</button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 
 // --- Modales ---
 
@@ -631,3 +725,7 @@ function SaleModal({ saleItem, cart, products, onClose, onConfirm }) {
                     </div>
                     <div className="p-4 bg-gray-900/50 flex justify-end space-x-3 rounded-b-lg"><button type="button" onClick={onClose} className="bg-gray-700 text-white font-bold py-2 px-4 rounded-lg border border-gray-600 hover:bg-gray-600">Cancelar</button><button type="submit" className="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">Confirmar Venta</button></div>
                 </form>
+            </div>
+        </div>
+    );
+}
