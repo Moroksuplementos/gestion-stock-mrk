@@ -31,6 +31,7 @@ export default function App() {
   const [sales, setSales] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [movements, setMovements] = useState([]);
+  const [cart, setCart] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [brandFilter, setBrandFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -120,7 +121,7 @@ export default function App() {
     if (type === 'product') setIsProductModalOpen(true);
     if (type === 'combo') setIsComboModalOpen(true);
     if (type === 'delete') setIsDeleteModalOpen(true);
-    if (type === 'sale_combo' || type === 'sale_product') setIsSaleModalOpen(true);
+    if (type === 'sale') setIsSaleModalOpen(true);
     if (type === 'supplier') setIsSupplierModalOpen(true);
     if (type === 'purchase') setIsPurchaseModalOpen(true);
   };
@@ -207,6 +208,7 @@ export default function App() {
     batch.set(movementRef, newMovement);
 
     await batch.commit();
+    setCart([]); // Limpiar carrito después de la venta
     console.log("Venta Registrada:", { items: itemDescriptions, ...newSale });
     closeModal();
   };
@@ -254,8 +256,8 @@ export default function App() {
   }, [products, brandFilter, searchQuery]);
 
 
-  const TabButton = ({ tabName, label, icon }) => (
-    <button onClick={() => setActiveTab(tabName)} className={`flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === tabName ? 'bg-yellow-500 text-black shadow' : 'text-gray-600 hover:bg-gray-800 hover:text-gray-200'}`}>
+  const TabButton = ({ tabName, label, icon, isPrimary = false }) => (
+    <button onClick={() => setActiveTab(tabName)} className={`flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${isPrimary ? 'bg-green-600 text-white shadow hover:bg-green-700' : activeTab === tabName ? 'bg-yellow-500 text-black shadow' : 'text-gray-600 hover:bg-gray-800 hover:text-gray-200'}`}>
       {icon} {label}
     </button>
   );
@@ -277,6 +279,7 @@ export default function App() {
         </header>
         <div className="mb-6 flex space-x-2 border-b border-gray-700 pb-2 flex-wrap gap-y-2">
             <TabButton tabName="dashboard" label="Dashboard" icon={<ChartBarIcon />} />
+            <TabButton tabName="sale_creation" label="Vender" icon={<ShoppingCartIcon />} isPrimary={true}/>
             <TabButton tabName="objetivos" label="Objetivos" icon={<TargetIcon />} />
             <TabButton tabName="products" label="Productos" icon={<PackageIcon />} />
             <TabButton tabName="combos" label="Combos" icon={<ShoppingCartIcon />} />
@@ -287,6 +290,7 @@ export default function App() {
             {isLoading && <p className="text-center py-10">Conectando a la base de datos...</p>}
             {!isLoading && activeTab === 'dashboard' && <DashboardView products={products} />}
             {!isLoading && activeTab === 'objetivos' && <GoalsView sales={sales} />}
+            {!isLoading && activeTab === 'sale_creation' && <SaleCreationView products={products} combos={combos} cart={cart} setCart={setCart} onOpenModal={openModal} />}
             {!isLoading && activeTab === 'products' && <ProductView products={filteredProducts} isLoading={isLoading} onOpenModal={openModal} brands={uniqueBrands} activeFilter={brandFilter} onFilterChange={setBrandFilter} searchQuery={searchQuery} onSearchChange={setSearchQuery} />}
             {!isLoading && activeTab === 'combos' && <ComboView combos={combos} products={products} isLoading={isLoading} onOpenModal={openModal} />}
             {!isLoading && activeTab === 'suppliers' && <SupplierView suppliers={suppliers} isLoading={isLoading} onOpenModal={openModal} />}
@@ -296,7 +300,7 @@ export default function App() {
       {isProductModalOpen && <ProductModal product={selectedItem?.item} onClose={closeModal} onSave={handleSaveProduct} />}
       {isComboModalOpen && <ComboModal combo={selectedItem?.item} products={products} onClose={closeModal} onSave={handleSaveCombo} />}
       {isDeleteModalOpen && <DeleteConfirmationModal item={selectedItem?.item} itemType={selectedItem?.type} onClose={closeModal} onConfirm={handleDelete} />}
-      {isSaleModalOpen && <SaleModal saleItem={selectedItem} onClose={closeModal} onConfirm={handleConfirmSale} />}
+      {isSaleModalOpen && <SaleModal saleItem={selectedItem} products={products} onClose={closeModal} onConfirm={handleConfirmSale} cart={cart} />}
       {isSupplierModalOpen && <SupplierModal supplier={selectedItem?.item} onClose={closeModal} onSave={handleSaveSupplier} />}
       {isPurchaseModalOpen && <PurchaseModal products={products} suppliers={suppliers} onClose={closeModal} onConfirm={handleRegisterPurchase} />}
     </div>
@@ -423,7 +427,7 @@ function ProductView({ products, isLoading, onOpenModal, brands, activeFilter, o
                                     </td>
                                     <td className="p-4 text-gray-400 hidden lg:table-cell text-right">{p.weighted_average_cost.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}</td>
                                     <td className="p-4 font-semibold text-white text-right">{stockValue.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}</td>
-                                    <td className="p-4 text-center"><div className="flex justify-center items-center space-x-2 flex-wrap gap-2"><button onClick={() => onOpenModal('sale_product', p)} className="flex items-center text-sm bg-green-600 text-white font-semibold py-1 px-2 rounded-lg hover:bg-green-700 transition-colors"><ShoppingCartIcon />Vender</button><button onClick={() => onOpenModal('product', p)} className="p-2 text-yellow-500 hover:bg-yellow-500/10 rounded-full"><EditIcon /></button><button onClick={() => onOpenModal('delete', {item: p, type: 'product'})} className="p-2 text-red-500 hover:bg-red-500/10 rounded-full"><TrashIcon /></button></div></td>
+                                    <td className="p-4 text-center"><div className="flex justify-center items-center space-x-2 flex-wrap gap-2"><button onClick={() => onOpenModal('product', p)} className="p-2 text-yellow-500 hover:bg-yellow-500/10 rounded-full"><EditIcon /></button><button onClick={() => onOpenModal('delete', {item: p, type: 'product'})} className="p-2 text-red-500 hover:bg-red-500/10 rounded-full"><TrashIcon /></button></div></td>
                                 </tr>
                             )
                         })}
@@ -453,7 +457,7 @@ function ComboView({ combos, products, isLoading, onOpenModal }) {
                                 <td className="p-4 font-medium text-white">{c.name}</td>
                                 <td className="p-4 text-gray-400 hidden md:table-cell">{c.sku}</td>
                                 <td className="p-4 text-sm text-gray-300"><ul className="list-disc list-inside">{c.items.map(item => { const product = getProductDetails(item.productId); return product ? <li key={item.productId}>{item.quantity}x {product.baseName} ({product.variantName})</li> : <li key={item.productId} className="text-red-500">Producto no encontrado</li>; })}</ul></td>
-                                <td className="p-4 text-center"><div className="flex justify-center items-center space-x-2 flex-wrap gap-2"><button onClick={() => onOpenModal('sale_combo', c)} className="flex items-center text-sm bg-green-600 text-white font-semibold py-2 px-3 rounded-lg hover:bg-green-700 transition-colors"><ShoppingCartIcon />Vender</button><button onClick={() => onOpenModal('combo', c)} className="p-2 text-yellow-500 hover:bg-yellow-500/10 rounded-full"><EditIcon /></button><button onClick={() => onOpenModal('delete', {item: c, type: 'combo'})} className="p-2 text-red-500 hover:bg-red-500/10 rounded-full"><TrashIcon /></button></div></td>
+                                <td className="p-4 text-center"><div className="flex justify-center items-center space-x-2 flex-wrap gap-2"><button onClick={() => onOpenModal('combo', c)} className="p-2 text-yellow-500 hover:bg-yellow-500/10 rounded-full"><EditIcon /></button><button onClick={() => onOpenModal('delete', {item: c, type: 'combo'})} className="p-2 text-red-500 hover:bg-red-500/10 rounded-full"><TrashIcon /></button></div></td>
                             </tr>
                         ))}
                     </tbody>
@@ -511,6 +515,100 @@ function MovementView({ movements, isLoading }) {
                 </table>
             </div>
             )}
+        </div>
+    );
+}
+
+function SaleCreationView({ products, combos, cart, setCart, onOpenModal }) {
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const addToCart = (item, type) => {
+        const existingItem = cart.find(cartItem => cartItem.id === item.id && cartItem.type === type);
+        if (existingItem) {
+            setCart(cart.map(cartItem => cartItem.id === item.id && cartItem.type === type ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem));
+        } else {
+            setCart([...cart, { ...item, quantity: 1, type }]);
+        }
+    };
+
+    const updateCartQuantity = (itemId, type, quantity) => {
+        if (quantity <= 0) {
+            setCart(cart.filter(cartItem => !(cartItem.id === itemId && cartItem.type === type)));
+        } else {
+            setCart(cart.map(cartItem => cartItem.id === itemId && cartItem.type === type ? { ...cartItem, quantity } : cartItem));
+        }
+    };
+    
+    const totalAmount = useMemo(() => {
+        return cart.reduce((total, cartItem) => {
+            if (cartItem.type === 'product') {
+                return total + (cartItem.weighted_average_cost * cartItem.quantity);
+            }
+            if (cartItem.type === 'combo') {
+                const comboTotal = cartItem.items.reduce((comboSum, comboProduct) => {
+                    const productDetails = products.find(p => p.id === comboProduct.productId);
+                    return comboSum + (productDetails?.weighted_average_cost || 0) * comboProduct.quantity;
+                }, 0);
+                return total + (comboTotal * cartItem.quantity);
+            }
+            return total;
+        }, 0);
+    }, [cart, products]);
+
+    const filteredItems = useMemo(() => {
+        const lowerSearchTerm = searchTerm.toLowerCase();
+        const allItems = [
+            ...products.map(p => ({...p, type: 'product', name: `${p.baseName} (${p.variantName})`})),
+            ...combos.map(c => ({...c, type: 'combo'}))
+        ];
+        return allItems.filter(item => item.name.toLowerCase().includes(lowerSearchTerm) || item.sku.toLowerCase().includes(lowerSearchTerm));
+    }, [products, combos, searchTerm]);
+
+    return (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 bg-gray-800 rounded-lg shadow-md p-6 border border-gray-700">
+                <h2 className="text-xl font-semibold mb-4 text-white">Items Disponibles</h2>
+                <div className="relative mb-4">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><SearchIcon /></div>
+                    <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Buscar producto o combo..." className="w-full bg-gray-900 border border-gray-600 text-white text-sm rounded-lg focus:ring-yellow-500 focus:border-yellow-500 block pl-10 p-2.5" />
+                </div>
+                <div className="max-h-96 overflow-y-auto divide-y divide-gray-700">
+                    {filteredItems.map(item => (
+                        <div key={`${item.type}-${item.id}`} className="flex justify-between items-center p-2 hover:bg-gray-700/50">
+                            <div>
+                                <p className="font-bold text-white">{item.name}</p>
+                                <p className="text-xs text-gray-400">{item.sku}</p>
+                            </div>
+                            <button onClick={() => addToCart(item, item.type)} className="bg-yellow-500 text-black font-bold py-1 px-3 rounded-lg text-sm hover:bg-yellow-600">+</button>
+                        </div>
+                    ))}
+                </div>
+            </div>
+            <div className="bg-gray-800 rounded-lg shadow-md p-6 border border-gray-700">
+                <h2 className="text-xl font-semibold mb-4 text-white">Carrito de Venta</h2>
+                <div className="space-y-2 max-h-80 overflow-y-auto divide-y divide-gray-700">
+                    {cart.length === 0 ? <p className="text-gray-400 text-center py-10">El carrito está vacío</p> : cart.map(item => (
+                        <div key={`${item.type}-${item.id}`} className="pt-2">
+                            <p className="font-bold text-white text-sm">{item.name}</p>
+                            <div className="flex items-center justify-between mt-1">
+                                <div className="flex items-center">
+                                    <button onClick={() => updateCartQuantity(item.id, item.type, item.quantity - 1)} className="bg-gray-700 h-6 w-6 rounded-full text-white">-</button>
+                                    <span className="px-3">{item.quantity}</span>
+                                    <button onClick={() => updateCartQuantity(item.id, item.type, item.quantity + 1)} className="bg-gray-700 h-6 w-6 rounded-full text-white">+</button>
+                                </div>
+                                <button onClick={() => updateCartQuantity(item.id, item.type, 0)} className="text-red-500 hover:text-red-400"><TrashIcon /></button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                <div className="border-t border-gray-700 mt-4 pt-4">
+                    <div className="flex justify-between font-bold text-lg">
+                        <span className="text-white">Total:</span>
+                        <span className="text-yellow-500">{totalAmount.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}</span>
+                    </div>
+                    <button onClick={() => onOpenModal('sale')} disabled={cart.length === 0} className="w-full mt-4 bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed">Finalizar Venta</button>
+                </div>
+            </div>
         </div>
     );
 }
@@ -581,55 +679,38 @@ function DeleteConfirmationModal({ item, itemType, onClose, onConfirm }) {
     );
 }
 
-function SaleModal({ saleItem, onClose, onConfirm }) {
-    const { item, type } = saleItem;
+function SaleModal({ saleItem, cart, products, onClose, onConfirm }) {
     const [saleDetails, setSaleDetails] = useState({ origin: 'Tienda Nube', type: 'Minorista', orderNumber: '', paymentMethod: 'PagoNube', shippingCost: 0 });
     const [isFreeShipping, setIsFreeShipping] = useState(false);
-    const [quantity, setQuantity] = useState(1);
-
+    
     const handleChange = (e) => { const { name, value } = e.target; setSaleDetails(prev => ({ ...prev, [name]: value })); };
     const handleShippingCostChange = (e) => { setSaleDetails(prev => ({...prev, shippingCost: Number(e.target.value) || 0}))};
     
     const handleSubmit = (e) => {
         e.preventDefault();
-        let itemsToSell = [];
-        if (type === 'sale_product') {
-            itemsToSell.push({ productId: item.id, quantity });
-        } else if (type === 'sale_combo') {
-            itemsToSell = item.items.map(i => ({ productId: i.productId, quantity: i.quantity }));
-        }
+        const itemsToSell = cart.flatMap(cartItem => {
+            if (cartItem.type === 'product') {
+                return { productId: cartItem.id, quantity: cartItem.quantity };
+            }
+            if (cartItem.type === 'combo') {
+                return cartItem.items.map(comboProduct => ({
+                    productId: comboProduct.productId,
+                    quantity: comboProduct.quantity * cartItem.quantity
+                }));
+            }
+            return [];
+        });
         onConfirm(saleDetails, itemsToSell);
     };
 
     useEffect(() => { if (!isFreeShipping) { setSaleDetails(prev => ({...prev, shippingCost: 0})); } }, [isFreeShipping]);
 
-    const renderItemsList = () => {
-        if (type === 'sale_product') {
-            const newStock = item.current_stock - quantity;
-            const stockOk = newStock >= 0;
-            return <li className={!stockOk ? 'text-red-500 font-bold' : ''}>{quantity}x {item.baseName} ({item.variantName}) <span className="text-gray-500">(Stock: {item.current_stock} → {newStock})</span></li>;
-        }
-        if (type === 'sale_combo') {
-            return item.items.map(comboItem => {
-                const product = products.find(p => p.id === comboItem.productId);
-                if (!product) return null;
-                const newStock = product.current_stock - comboItem.quantity;
-                const stockOk = newStock >= 0;
-                return <li key={comboItem.productId} className={!stockOk ? 'text-red-500 font-bold' : ''}>{comboItem.quantity}x {product.baseName} ({product.variantName}) <span className="text-gray-500">(Stock: {product.current_stock} → {newStock})</span></li>;
-            });
-        }
-        return null;
-    };
-
     return (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 p-4">
             <div className="bg-gray-800 rounded-lg shadow-2xl w-full max-w-lg border border-gray-600">
                 <form onSubmit={handleSubmit}>
-                    <div className="p-6 border-b border-gray-700"><h3 className="text-xl font-semibold text-white">Registrar Venta</h3><p className="mt-1 text-gray-400">Item: <span className="font-bold text-yellow-400">"{type === 'sale_product' ? `${item.baseName} (${item.variantName})` : item.name}"</span></p></div>
+                    <div className="p-6 border-b border-gray-700"><h3 className="text-xl font-semibold text-white">Finalizar Venta</h3><p className="mt-1 text-gray-400">Completa los detalles de la transacción.</p></div>
                     <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto text-left">
-                        {type === 'sale_product' && (
-                            <div><label className="block text-sm font-medium text-gray-300 mb-1">Cantidad</label><input type="number" min="1" max={item.current_stock} value={quantity} onChange={e => setQuantity(Number(e.target.value))} className="w-full bg-gray-900 border-gray-600 text-white rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500" required /></div>
-                        )}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                              <div><label className="block text-sm font-medium text-gray-300 mb-1">Origen</label><select name="origin" value={saleDetails.origin} onChange={handleChange} className="w-full bg-gray-900 border-gray-600 text-white rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500"><option>Tienda Nube</option><option>WhatsApp</option></select></div>
                             <div><label className="block text-sm font-medium text-gray-300 mb-1">Tipo</label><select name="type" value={saleDetails.type} onChange={handleChange} className="w-full bg-gray-900 border-gray-600 text-white rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500"><option>Minorista</option><option>Mayorista</option></select></div>
@@ -640,7 +721,7 @@ function SaleModal({ saleItem, onClose, onConfirm }) {
                             <div className="flex items-center"><input id="freeShipping" type="checkbox" checked={isFreeShipping} onChange={(e) => setIsFreeShipping(e.target.checked)} className="h-4 w-4 rounded border-gray-600 bg-gray-700 text-yellow-500 focus:ring-yellow-600" /><label htmlFor="freeShipping" className="ml-2 block text-sm text-gray-300">Envío Gratis (costo asumido)</label></div>
                             {isFreeShipping && (<div><label className="block text-sm font-medium text-gray-300 mb-1">Costo del Envío ($)</label><input type="number" name="shippingCost" value={saleDetails.shippingCost || ''} onChange={handleShippingCostChange} className="w-full bg-gray-900 border-gray-600 text-white rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500" placeholder="0" /></div>)}
                         </div>
-                        <div className="pt-2"><p className="text-sm font-medium text-gray-300 mb-2">Se descontará el siguiente stock:</p><ul className="list-disc list-inside bg-gray-900/50 p-3 rounded-lg text-gray-300 text-sm">{renderItemsList()}</ul></div>
+                        <div className="pt-2"><p className="text-sm font-medium text-gray-300 mb-2">Resumen del Carrito:</p><ul className="list-disc list-inside bg-gray-900/50 p-3 rounded-lg text-gray-300 text-sm">{cart.map(item => <li key={`${item.type}-${item.id}`}>{item.quantity}x {item.name}</li>)}</ul></div>
                     </div>
                     <div className="p-4 bg-gray-900/50 flex justify-end space-x-3 rounded-b-lg"><button type="button" onClick={onClose} className="bg-gray-700 text-white font-bold py-2 px-4 rounded-lg border border-gray-600 hover:bg-gray-600">Cancelar</button><button type="submit" className="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">Confirmar Venta</button></div>
                 </form>
