@@ -1,0 +1,14 @@
+{
+  "installCommand": "npm install",
+  "framework": "vite",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/node",
+      "config": {
+        "maxLambdaSize": "15mb",
+        "runtime": "nodejs18.x"
+      }
+    }
+  ]
+}
