@@ -7,7 +7,7 @@ import {
   query, writeBatch
 } from 'firebase/firestore';
 import {
-  getAuth, signInAnonymously, onAuthStateChanged
+  getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken
 } from 'firebase/auth';
 
 // --- Iconos SVG ---
@@ -295,9 +295,28 @@ const formatCurrency = (amount) => {
 
 // --- Componente Principal de la Aplicación ---
 export default function App() {
-  // Configuración de Firebase obtenida de las variables globales del entorno Canvas
-  const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+  // Configuración de Firebase: Intenta de __firebase_config (Canvas), luego de .env.local (Vite)
+  const firebaseConfig = (() => {
+    if (typeof __firebase_config !== 'undefined') {
+      // Running in Canvas environment
+      return JSON.parse(__firebase_config);
+    } else if (import.meta.env.VITE_FIREBASE_CONFIG) {
+      // Running locally with Vite and .env.local
+      try {
+        console.log("Raw VITE_FIREBASE_CONFIG string:", import.meta.env.VITE_FIREBASE_CONFIG); // Log the raw string
+        return JSON.parse(import.meta.env.VITE_FIREBASE_CONFIG);
+      } catch (e) {
+        console.error("Error parsing VITE_FIREBASE_CONFIG from .env.local:", e);
+        return {};
+      }
+    }
+    // Fallback if neither is found (should not happen if setup is correct)
+    return {};
+  })();
+
+  // App ID: de __app_id (Canvas) o un default para local
   const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
 
   const [db, setDb] = useState(null);
   const [userId, setUserId] = useState(null);
@@ -312,6 +331,7 @@ export default function App() {
   const [brandFilter, setBrandFilter] = useState('all'); // Filtro por marca
   const [searchQuery, setSearchQuery] = useState(''); // Búsqueda general
   const [logoUrl, setLogoUrl] = useState(null); // URL del logo personalizado
+  const [firebaseError, setFirebaseError] = useState(null); // Nuevo estado para errores de Firebase
 
   // Estados para controlar la visibilidad de los modales
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -329,10 +349,20 @@ export default function App() {
   // --- Inicialización de Firebase y Autenticación ---
   useEffect(() => {
     try {
+      console.log("Initializing Firebase with config:", firebaseConfig); // Log the config
+      // Check if firebaseConfig is empty, which means it failed to load
+      if (Object.keys(firebaseConfig).length === 0 || !firebaseConfig.apiKey) {
+        console.error("Firebase config is empty or missing API key. Cannot initialize Firebase.");
+        setFirebaseError("Error de configuración de Firebase: API Key no encontrada o inválida. Por favor, revisa tu archivo .env.local o la variable de entorno en Vercel.");
+        setIsLoading(false);
+        return;
+      }
+
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
       const firestoreDb = getFirestore(app);
       setDb(firestoreDb);
+      setFirebaseError(null); // Clear any previous errors
 
       // Autenticación anónima para obtener un userId
       onAuthStateChanged(auth, async (user) => {
@@ -350,13 +380,17 @@ export default function App() {
       });
     } catch (error) {
       console.error("Error initializing Firebase:", error);
+      setFirebaseError(`Error al inicializar Firebase: ${error.message}. Por favor, revisa tu configuración.`);
       setIsLoading(false);
     }
   }, [firebaseConfig]); // Dependencia firebaseConfig para re-inicializar si cambia (aunque no debería en este caso)
 
   // --- Suscripción a Colecciones de Firestore ---
   useEffect(() => {
-    if (!db || !userId) return; // Esperar a que db y userId estén disponibles
+    if (!db || !userId) {
+      console.log("Firestore not ready for subscriptions. db:", db, "userId:", userId);
+      return; // Esperar a que db y userId estén disponibles
+    }
     setIsLoading(true);
 
     // Definición de las colecciones y sus setters de estado
@@ -384,6 +418,7 @@ export default function App() {
         setIsLoading(false); // Desactivar carga una vez que los datos iniciales están listos
       }, (error) => {
         console.error(`Error fetching ${name}:`, error);
+        setFirebaseError(`Error al cargar datos de ${name}: ${error.message}`);
         setIsLoading(false);
       });
     });
@@ -426,163 +461,219 @@ export default function App() {
 
   // Guardar/actualizar un producto
   const handleSaveProduct = async (data) => {
+    if (!db) {
+      console.error("Firestore DB not initialized. Cannot save product.");
+      return;
+    }
     const productData = { ...data };
     if (!productData.sku || !selectedItem?.item) { // Generar SKU solo si es un producto nuevo o no tiene SKU
       productData.sku = generateSKU(productData.name, productData.brand, productData.variant);
     }
 
-    if (selectedItem?.item) {
-      await updateDoc(doc(db, getCol('products').path, selectedItem.item.id), productData);
-    } else {
-      await addDoc(getCol('products'), productData);
+    try {
+      if (selectedItem?.item) {
+        await updateDoc(doc(db, getCol('products').path, selectedItem.item.id), productData);
+        console.log("Producto actualizado:", productData.name);
+      } else {
+        await addDoc(getCol('products'), productData);
+        console.log("Nuevo producto añadido:", productData.name);
+      }
+      closeModal();
+    } catch (error) {
+      console.error("Error al guardar el producto:", error);
+      // Optionally, set a state to show an error message in the UI
     }
-    closeModal();
   };
 
   // Guardar/actualizar un combo
   const handleSaveCombo = async (data) => {
-    if (selectedItem?.item) {
-      await updateDoc(doc(db, getCol('combos').path, selectedItem.item.id), data);
-    } else {
-      await addDoc(getCol('combos'), data);
+    if (!db) {
+      console.error("Firestore DB not initialized. Cannot save combo.");
+      return;
     }
-    closeModal();
+    try {
+      if (selectedItem?.item) {
+        await updateDoc(doc(db, getCol('combos').path, selectedItem.item.id), data);
+        console.log("Combo actualizado:", data.name);
+      } else {
+        await addDoc(getCol('combos'), data);
+        console.log("Nuevo combo añadido:", data.name);
+      }
+      closeModal();
+    } catch (error) {
+      console.error("Error al guardar el combo:", error);
+    }
   };
 
   // Guardar/actualizar un proveedor
   const handleSaveSupplier = async (data) => {
-    if (selectedItem?.item) {
-      await updateDoc(doc(db, getCol('suppliers').path, selectedItem.item.id), data);
-    } else {
-      await addDoc(getCol('suppliers'), data);
+    if (!db) {
+      console.error("Firestore DB not initialized. Cannot save supplier.");
+      return;
     }
-    closeModal();
+    try {
+      if (selectedItem?.item) {
+        await updateDoc(doc(db, getCol('suppliers').path, selectedItem.item.id), data);
+        console.log("Proveedor actualizado:", data.name);
+      } else {
+        await addDoc(getCol('suppliers'), data);
+        console.log("Nuevo proveedor añadido:", data.name);
+      }
+      closeModal();
+    } catch (error) {
+      console.error("Error al guardar el proveedor:", error);
+    }
   };
 
   // Registrar una compra
   const handleRegisterPurchase = async (purchaseData) => {
+    if (!db) {
+      console.error("Firestore DB not initialized. Cannot register purchase.");
+      return;
+    }
     const batch = writeBatch(db);
     const purchaseDate = new Date().toISOString().split('T')[0];
 
-    // 1. Añadir el registro de la compra
-    const purchaseRef = doc(getCol('movements')); // Crea una nueva referencia de documento para el movimiento
-    batch.set(purchaseRef, {
-      type: 'Compra',
-      date: purchaseDate,
-      supplierId: purchaseData.supplierId,
-      supplierName: suppliers.find(s => s.id === purchaseData.supplierId)?.name || 'Desconocido',
-      items: purchaseData.items.map(item => ({
-        productId: item.productId,
-        productName: item.productName,
-        variant: item.variant,
-        quantity: item.quantity,
-        cost: item.cost,
-        totalCost: item.quantity * item.cost
-      })),
-      totalAmount: purchaseData.items.reduce((sum, item) => sum + item.quantity * item.cost, 0),
-    });
+    try {
+      // 1. Añadir el registro de la compra
+      const purchaseRef = doc(getCol('movements')); // Crea una nueva referencia de documento para el movimiento
+      batch.set(purchaseRef, {
+        type: 'Compra',
+        date: purchaseDate,
+        supplierId: purchaseData.supplierId,
+        supplierName: suppliers.find(s => s.id === purchaseData.supplierId)?.name || 'Desconocido',
+        items: purchaseData.items.map(item => ({
+          productId: item.productId,
+          productName: item.productName,
+          variant: item.variant,
+          quantity: item.quantity,
+          cost: item.cost,
+          totalCost: item.quantity * item.cost
+        })),
+        totalAmount: purchaseData.items.reduce((sum, item) => sum + item.quantity * item.cost, 0),
+      });
 
-    // 2. Actualizar stock y costo promedio ponderado de los productos
-    for (const item of purchaseData.items) {
-      const productRef = doc(db, getCol('products').path, item.productId);
-      const currentProduct = products.find(p => p.id === item.productId);
+      // 2. Actualizar stock y costo promedio ponderado de los productos
+      for (const item of purchaseData.items) {
+        const productRef = doc(db, getCol('products').path, item.productId);
+        const currentProduct = products.find(p => p.id === item.productId);
 
-      if (currentProduct) {
-        const oldStock = currentProduct.stock || 0;
-        const oldTotalCost = (currentProduct.cost || 0) * oldStock;
-        const newStock = oldStock + item.quantity;
-        const newTotalCost = oldTotalCost + (item.quantity * item.cost);
-        const newAverageCost = newStock > 0 ? newTotalCost / newStock : 0;
+        if (currentProduct) {
+          const oldStock = currentProduct.stock || 0;
+          const oldTotalCost = (currentProduct.cost || 0) * oldStock;
+          const newStock = oldStock + item.quantity;
+          const newTotalCost = oldTotalCost + (item.quantity * item.cost);
+          const newAverageCost = newStock > 0 ? newTotalCost / newStock : 0;
 
-        batch.update(productRef, {
-          stock: newStock,
-          cost: newAverageCost, // Actualiza el costo promedio ponderado
-        });
+          batch.update(productRef, {
+            stock: newStock,
+            cost: newAverageCost, // Actualiza el costo promedio ponderado
+          });
+        }
       }
+      await batch.commit();
+      console.log("Compra registrada con éxito.");
+      closeModal();
+      setCart([]); // Limpiar el carrito después de la compra
+    } catch (error) {
+      console.error("Error al registrar la compra:", error);
     }
-    await batch.commit();
-    closeModal();
-    setCart([]); // Limpiar el carrito después de la compra
   };
 
   // Finalizar una venta (desde el carrito)
   const handleConfirmSale = async (saleDetails) => {
+    if (!db) {
+      console.error("Firestore DB not initialized. Cannot finalize sale.");
+      return;
+    }
     const batch = writeBatch(db);
     const saleDate = new Date().toISOString().split('T')[0];
     let totalSaleAmount = 0;
     let totalShippingCost = saleDetails.shippingCost || 0;
 
-    // 1. Añadir el registro de la venta
-    const saleItems = cart.map(item => {
-      const itemPrice = item.type === 'product' ? item.price : item.comboPrice;
-      const itemTotal = item.quantity * itemPrice;
-      totalSaleAmount += itemTotal;
-      return {
-        id: item.id,
-        name: item.name,
-        type: item.type,
-        quantity: item.quantity,
-        price: itemPrice,
-        total: itemTotal,
-        ...(item.type === 'product' && { variant: item.variant, sku: item.sku }),
-      };
-    });
+    try {
+      // 1. Añadir el registro de la venta
+      const saleItems = cart.map(item => {
+        const itemPrice = item.type === 'product' ? item.price : item.comboPrice;
+        const itemTotal = item.quantity * itemPrice;
+        totalSaleAmount += itemTotal;
+        return {
+          id: item.id,
+          name: item.name,
+          type: item.type,
+          quantity: item.quantity,
+          price: itemPrice,
+          total: itemTotal,
+          ...(item.type === 'product' && { variant: item.variant, sku: item.sku }),
+        };
+      });
 
-    const saleRef = doc(getCol('sales')); // Crea una nueva referencia de documento para la venta
-    batch.set(saleRef, {
-      date: saleDate,
-      origin: saleDetails.origin,
-      orderNumber: saleDetails.orderNumber || '',
-      saleType: saleDetails.saleType,
-      paymentMethod: saleDetails.paymentMethod,
-      shippingCost: totalShippingCost,
-      items: saleItems,
-      totalAmount: totalSaleAmount,
-      finalAmount: totalSaleAmount - totalShippingCost // Monto final después de restar el envío si lo absorbe la tienda
-    });
+      const saleRef = doc(getCol('sales')); // Crea una nueva referencia de documento para la venta
+      batch.set(saleRef, {
+        date: saleDate,
+        origin: saleDetails.origin,
+        orderNumber: saleDetails.orderNumber || '',
+        saleType: saleDetails.saleType,
+        paymentMethod: saleDetails.paymentMethod,
+        shippingCost: totalShippingCost,
+        items: saleItems,
+        totalAmount: totalSaleAmount,
+        finalAmount: totalSaleAmount - totalShippingCost // Monto final después de restar el envío si lo absorbe la tienda
+      });
 
-    // 2. Actualizar stock de productos (para productos individuales y combos)
-    for (const cartItem of cart) {
-      if (cartItem.type === 'product') {
-        const productRef = doc(db, getCol('products').path, cartItem.id);
-        batch.update(productRef, {
-          stock: products.find(p => p.id === cartItem.id).stock - cartItem.quantity,
-          soldCount: (products.find(p => p.id === cartItem.id).soldCount || 0) + cartItem.quantity,
-        });
-      } else if (cartItem.type === 'combo') {
-        const combo = combos.find(c => c.id === cartItem.id);
-        if (combo && combo.items) {
-          for (const comboItem of combo.items) {
-            const productRef = doc(db, getCol('products').path, comboItem.productId);
-            const currentProduct = products.find(p => p.id === comboItem.productId);
-            if (currentProduct) {
-              batch.update(productRef, {
-                stock: currentProduct.stock - (comboItem.quantity * cartItem.quantity),
-                soldCount: (currentProduct.soldCount || 0) + (comboItem.quantity * cartItem.quantity),
-              });
+      // 2. Actualizar stock de productos (para productos individuales y combos)
+      for (const cartItem of cart) {
+        if (cartItem.type === 'product') {
+          const productRef = doc(db, getCol('products').path, cartItem.id);
+          const currentProduct = products.find(p => p.id === cartItem.id);
+          if (currentProduct) {
+            batch.update(productRef, {
+              stock: currentProduct.stock - cartItem.quantity,
+              soldCount: (currentProduct.soldCount || 0) + (cartItem.quantity),
+            });
+          }
+        } else if (cartItem.type === 'combo') {
+          const combo = combos.find(c => c.id === cartItem.id);
+          if (combo && combo.items) {
+            for (const comboItem of combo.items) {
+              const productRef = doc(db, getCol('products').path, comboItem.productId);
+              const currentProduct = products.find(p => p.id === comboItem.productId);
+              if (currentProduct) {
+                batch.update(productRef, {
+                  stock: currentProduct.stock - (comboItem.quantity * cartItem.quantity),
+                  soldCount: (currentProduct.soldCount || 0) + (comboItem.quantity * cartItem.quantity),
+                });
+              }
             }
           }
         }
       }
+
+      // 3. Añadir movimiento de salida por venta
+      const movementRef = doc(getCol('movements')); // Nueva referencia para el movimiento
+      batch.set(movementRef, {
+        type: 'Venta',
+        date: saleDate,
+        items: saleItems,
+        totalAmount: totalSaleAmount,
+        details: `Venta ${saleDetails.saleType} por ${saleDetails.origin} (${saleDetails.paymentMethod}). Envío: ${formatCurrency(totalShippingCost)}`,
+      });
+
+      await batch.commit();
+      console.log("Venta finalizada con éxito.");
+      closeModal();
+      setCart([]); // Limpiar el carrito después de la venta
+    } catch (error) {
+      console.error("Error al finalizar la venta:", error);
     }
-
-    // 3. Añadir movimiento de salida por venta
-    const movementRef = doc(getCol('movements')); // Nueva referencia para el movimiento
-    batch.set(movementRef, {
-      type: 'Venta',
-      date: saleDate,
-      items: saleItems,
-      totalAmount: totalSaleAmount,
-      details: `Venta ${saleDetails.saleType} por ${saleDetails.origin} (${saleDetails.paymentMethod}). Envío: ${formatCurrency(totalShippingCost)}`,
-    });
-
-    await batch.commit();
-    closeModal();
-    setCart([]); // Limpiar el carrito después de la venta
   };
 
   // Eliminar un item (producto, combo, proveedor)
   const handleDelete = async () => {
+    if (!db) {
+      console.error("Firestore DB not initialized. Cannot delete item.");
+      return;
+    }
     if (!selectedItem || !selectedItem.item) return;
 
     const { type, item } = selectedItem;
@@ -596,11 +687,18 @@ export default function App() {
     }
 
     try {
+      // Clear selected item and close modal immediately to prevent UI issues
+      setSelectedItem(null); // Clear selected item state
+      closeModal(); // Close the modal
+
+      // Perform the deletion asynchronously
       await deleteDoc(doc(db, getCol(collectionName).path, item.id));
-      closeModal();
+      console.log(`${type} eliminado con éxito:`, item.name);
+
     } catch (error) {
-      console.error(`Error deleting ${type}:`, error);
-      // Aquí podrías mostrar un mensaje de error al usuario
+      console.error(`Error al eliminar ${type}:`, error);
+      // If an error occurs during deletion, you might want to re-open the modal or show an error message
+      // For now, we just log it.
     }
   };
 
@@ -974,7 +1072,7 @@ export default function App() {
               value="" // Resetear selección después de añadir
             >
               <option value="">Añadir Producto...</option>
-              {products.map(p => (
+              {(products || []).map(p => ( // <--- MODIFICADO: Añadido (products || [])
                 <option key={p.id} value={p.id}>{p.name} - {p.variant} (SKU: {p.sku})</option>
               ))}
             </select>
@@ -1093,11 +1191,13 @@ export default function App() {
     const handleSubmit = (e) => {
       e.preventDefault();
       if (!selectedSupplier) {
-        alert('Por favor, selecciona un proveedor.');
+        // Using console.error instead of alert()
+        console.error('Error: Por favor, selecciona un proveedor.');
         return;
       }
       if (purchaseItems.length === 0) {
-        alert('Por favor, añade al menos un producto a la compra.');
+        // Using console.error instead of alert()
+        console.error('Error: Por favor, añade al menos un producto a la compra.');
         return;
       }
       onSave({ supplierId: selectedSupplier, items: purchaseItems });
@@ -1115,7 +1215,7 @@ export default function App() {
               required
             >
               <option value="">Selecciona un proveedor</option>
-              {suppliers.map(s => (
+              {(suppliers || []).map(s => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
             </select>
@@ -1154,8 +1254,7 @@ export default function App() {
             className="mt-2 block w-full rounded-md bg-gray-700 border-gray-600 text-gray-200 shadow-sm focus:border-yellow-500 focus:ring focus:ring-yellow-500 focus:ring-opacity-50"
             value=""
           >
-            <option value="">Añadir producto a la compra...</option>
-            {products.map(p => (
+            {(products || []).map(p => (
               <option key={p.id} value={p.id}>{p.name} - {p.variant} (Stock: {p.stock})</option>
             ))}
           </select>
@@ -1261,7 +1360,7 @@ export default function App() {
               Cancelar
             </button>
             <button type="submit"
-              className="px-4 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-700 transition-colors text-white">
+              className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 transition-colors text-white">
               Confirmar Venta
             </button>
           </div>
@@ -1399,7 +1498,7 @@ export default function App() {
             onChange={(e) => setSelectedMonth(Number(e.target.value))}
             className="rounded-md bg-gray-700 border-gray-600 text-gray-200 focus:border-yellow-500 focus:ring focus:ring-yellow-500 focus:ring-opacity-50"
           >
-            {months.map((month, index) => (
+            {(months || []).map((month, index) => (
               <option key={index} value={index}>{month}</option>
             ))}
           </select>
@@ -1409,7 +1508,7 @@ export default function App() {
             onChange={(e) => setSelectedYear(Number(e.target.value))}
             className="rounded-md bg-gray-700 border-gray-600 text-gray-200 focus:border-yellow-500 focus:ring focus:ring-yellow-500 focus:ring-opacity-50"
           >
-            {years.map((year) => (
+            {(years || []).map((year) => (
               <option key={year} value={year}>{year}</option>
             ))}
           </select>
@@ -1506,7 +1605,7 @@ export default function App() {
               onChange={(e) => setBrandFilter(e.target.value)}
               className="w-full pl-10 pr-4 py-2 rounded-lg bg-gray-700 border-gray-600 text-gray-200 shadow-sm focus:border-yellow-500 focus:ring focus:ring-yellow-500 focus:ring-opacity-50 appearance-none"
             >
-              {uniqueBrands.map(brand => (
+              {(uniqueBrands || []).map(brand => (
                 <option key={brand} value={brand}>
                   {brand === 'all' ? 'Todas las marcas' : brand}
                 </option>
@@ -1539,12 +1638,7 @@ export default function App() {
               </tr>
             </thead>
             <tbody className="bg-gray-800 divide-y divide-gray-700">
-              {products.length === 0 && (
-                <tr>
-                  <td colSpan="10" className="px-6 py-4 text-center text-gray-400">No hay productos registrados.</td>
-                </tr>
-              )}
-              {products.map((product) => {
+              {(products || []).map((product) => {
                 const isLowStock = product.stock <= product.reorderPoint;
                 const expirationDate = product.expirationDate ? new Date(product.expirationDate) : null;
                 const now = new Date();
@@ -1572,7 +1666,7 @@ export default function App() {
                       <div className="flex space-x-2">
                         <button onClick={() => openModal('product', product)}
                           className="text-yellow-500 hover:text-yellow-600">
-                          <EditIcon />
+                        <EditIcon />
                         </button>
                         <button onClick={() => openModal('delete', { type: 'product', item: product })}
                           className="text-red-500 hover:text-red-600">
@@ -1642,12 +1736,7 @@ export default function App() {
               </tr>
             </thead>
             <tbody className="bg-gray-800 divide-y divide-gray-700">
-              {combos.length === 0 && (
-                <tr>
-                  <td colSpan="4" className="px-6 py-4 text-center text-gray-400">No hay combos registrados.</td>
-                </tr>
-              )}
-              {combos.map((combo) => (
+              {(combos || []).map((combo) => (
                 <tr key={combo.id} className="hover:bg-gray-700 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap text-gray-200">{combo.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-gray-300">{formatCurrency(combo.comboPrice)}</td>
@@ -1700,12 +1789,7 @@ export default function App() {
               </tr>
             </thead>
             <tbody className="bg-gray-800 divide-y divide-gray-700">
-              {suppliers.length === 0 && (
-                <tr>
-                  <td colSpan="5" className="px-6 py-4 text-center text-gray-400">No hay proveedores registrados.</td>
-                </tr>
-              )}
-              {suppliers.map((supplier) => (
+              {(suppliers || []).map((supplier) => ( // <--- MODIFICADO: Añadido (suppliers || [])
                 <tr key={supplier.id} className="hover:bg-gray-700 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap text-gray-200">{supplier.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-gray-300">{supplier.contact}</td>
@@ -1757,12 +1841,7 @@ export default function App() {
               </tr>
             </thead>
             <tbody className="bg-gray-800 divide-y divide-gray-700">
-              {movements.length === 0 && (
-                <tr>
-                  <td colSpan="5" className="px-6 py-4 text-center text-gray-400">No hay movimientos registrados.</td>
-                </tr>
-              )}
-              {movements.map((movement) => (
+              {(movements || []).map((movement) => ( // <--- MODIFICADO: Añadido (movements || [])
                 <tr key={movement.id} className="hover:bg-gray-700 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap text-gray-300">{movement.date}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-gray-200">{movement.type}</td>
@@ -1802,7 +1881,7 @@ export default function App() {
             {/* Productos */}
             <h4 className="text-lg font-semibold text-gray-400">Productos Individuales</h4>
             {products.length === 0 && <p className="text-gray-500">No hay productos disponibles.</p>}
-            {products.map(product => (
+            {(products || []).map(product => ( // <--- MODIFICADO: Añadido (products || [])
               <div key={product.id} className="flex items-center bg-gray-700 p-3 rounded-md shadow-sm">
                 <div className="flex-grow">
                   <p className="font-medium text-gray-200">{product.name} - {product.variant}</p>
@@ -1820,7 +1899,7 @@ export default function App() {
             {/* Combos */}
             <h4 className="text-lg font-semibold text-gray-400 mt-6">Combos</h4>
             {combos.length === 0 && <p className="text-gray-500">No hay combos disponibles.</p>}
-            {combos.map(combo => (
+            {(combos || []).map(combo => ( // <--- MODIFICADO: Añadido (combos || [])
               <div key={combo.id} className="flex items-center bg-gray-700 p-3 rounded-md shadow-sm">
                 <div className="flex-grow">
                   <p className="font-medium text-gray-200">{combo.name}</p>
@@ -1849,7 +1928,7 @@ export default function App() {
             {cart.length === 0 ? (
               <p className="text-gray-500 text-center">El carrito está vacío.</p>
             ) : (
-              cart.map(item => (
+              (cart || []).map(item => ( // <--- MODIFICADO: Añadido (cart || [])
                 <div key={`${item.id}-${item.type}`} className="flex items-center bg-gray-700 p-3 rounded-md shadow-sm">
                   <div className="flex-grow">
                     <p className="font-medium text-gray-200">{item.name} {item.type === 'product' ? `(${item.variant})` : ''}</p>
@@ -1904,6 +1983,13 @@ export default function App() {
 
   return (
     <div className="bg-gray-900 min-h-screen text-gray-200 flex flex-col">
+      {/* Mensaje de Error de Firebase (visible en la UI) */}
+      {firebaseError && (
+        <div className="bg-red-800 text-white p-4 text-center font-bold">
+          {firebaseError}
+        </div>
+      )}
+
       {/* Encabezado */}
       <header className="bg-gray-800 p-4 shadow-lg flex items-center justify-between">
         <div className="flex items-center">
